@@ -66,10 +66,12 @@ class Puppet::Provider::Keystone < Puppet::Provider
   private
 
     def self.list_keystone_objects(type, number_columns, *args)
+      # Skip warnings and such which may appear before the tabular output
+      output = auth_keystone("#{type}-list", args).split("\n").grep(/^[+|]/)
       # this assumes that all returned objects are of the form
       # id, name, enabled_state, OTHER
       # number_columns can be a Fixnum or an Array of possible values that can be returned
-      list = (auth_keystone("#{type}-list", args).split("\n")[3..-2] || []).collect do |line|
+      list = (output[3..-2] || []).collect do |line|
         row = line.split(/\|/)[1..-1]
         row = row.map {|x| x.strip }
         # if both checks fail then we have a mismatch between what was expected and what was received
